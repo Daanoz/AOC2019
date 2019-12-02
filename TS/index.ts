@@ -60,8 +60,8 @@ const choosePuzzle = (): Observable<string> => {
     if (program.day) {
         if (puzzleList.indexOf(program.day) >= 0) { return of(program.day); }
         if (program.day.length < 2 &&
-            puzzleList.indexOf('0' + program.day) >= 0) { 
-            return of('0' + program.day); 
+            puzzleList.indexOf('0' + program.day) >= 0) {
+            return of('0' + program.day);
         }
     }
 
@@ -78,7 +78,7 @@ const choosePuzzle = (): Observable<string> => {
 const watchDir$ = (path: string) => {
     return new Observable(subscriber => {
         const watcher = fs.watch(
-            path, 
+            path,
             {persistent: true, recursive: true},
             ( ) => subscriber.next()
         );
@@ -94,8 +94,8 @@ const run = (puzzle: string, mode: string): Observable<any> => {
         const args: string[] = [];
         if (program.input) { args.push('--input', program.input); }
         const cmd = fork(
-            'index.ts', args, 
-            { 
+            'index.ts', args,
+            {
                 execArgv: ['-r', 'ts-node/register'],
                 cwd: puzzleDir
             }
@@ -133,7 +133,7 @@ choosePuzzle().pipe(
     takeUntil(destroy$)
 ).subscribe(
     () => {},
-    err => { 
+    err => {
         if (err) { term.red('%s\n', err); }
         process.exit(1)
     },
