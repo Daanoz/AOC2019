@@ -1,32 +1,44 @@
-import { Puzzle, Runner, BasePuzzle } from '../shared/';
-import { exec } from 'child_process';
+import { Puzzle, Runner, BasePuzzle, Result } from '../shared/';
 
-class PuzzleSolution extends BasePuzzle implements Puzzle {
+export class PuzzleSolution extends BasePuzzle implements Puzzle {
+    public args = {
+        noun: 12,
+        verb: 2,
+        position: 0,
+        target: 19690720
+    };
+
     public run() {
+        const result: Result = {};
+
         const input: number[] = this.getInputAsRows(',').map(r => parseInt(r, 10));
 
-        console.log("Part A: " + this.executeWithArgs(input, 12, 2));
+        result.a = this.executeWithArgs(input, this.args.noun, this.args.verb)[this.args.position];
+        result.b = this.findInputForOutput(input, this.args.target);
 
+        return result;
+    }
+
+    private findInputForOutput(input: number[], output: number): number {
         for (let noun = 0; noun <= 99; noun++) {
             for (let verb = 0; verb <= 99; verb++) {
                 const result = this.executeWithArgs(input, noun, verb);
-                if (result === 19690720) {
-                    console.log("Part B: " + (100 * noun + verb), noun, verb);
-                    noun = 100;
-                    verb = 100;
+                if (result[0] === output) {
+                    return (100 * noun + verb);
                 }
             }
         }
+        return -1;
     }
 
-    private executeWithArgs(instructions: number[], noun: number, verb: number): number {
+    private executeWithArgs(instructions: number[], noun: number, verb: number): number[] {
         const input = [...instructions];
         input[1] = noun;
         input[2] = verb;
         return this.execute(input);
     }
 
-    private execute(instructions: number[]): number {
+    private execute(instructions: number[]): number[] {
         const input = [...instructions];
         let instructionPointer = 0;
         let isFinished = false;
@@ -48,7 +60,7 @@ class PuzzleSolution extends BasePuzzle implements Puzzle {
             }
             instructionPointer += 4;
         }
-        return input[0];
+        return input;
     }
 }
 

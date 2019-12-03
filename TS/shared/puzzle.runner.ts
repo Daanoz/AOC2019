@@ -4,13 +4,15 @@ import path from 'path';
 
 import { Puzzle } from './puzzle.interface';
 
-program
-  .option('-i, --input <input>', 'input file');
-program.parse(process.argv);
-
 type Constructor<T> = new (...args: any[]) => T;
 
 export const Runner = (PuzzleClass: Constructor<Puzzle>) => {
+    if (process.env.NODE_ENV === 'test') { return; } // do not execute for tests
+
+    program
+        .option('-i, --input <input>', 'input file');
+    program.parse(process.argv);
+
     const PuzzleDir = process.cwd();
     const inst = new PuzzleClass();
 
@@ -20,8 +22,22 @@ export const Runner = (PuzzleClass: Constructor<Puzzle>) => {
     }
 
     if (fs.existsSync(path.join(PuzzleDir, inputFile))) {
-        inst.setInput(fs.readFileSync(path.join(PuzzleDir, inputFile), {encoding: 'utf-8'}))
+        inst.setInput(fs.readFileSync(path.join(PuzzleDir, inputFile), {encoding: 'utf-8'}));
+
+        const start = (new Date()).getMilliseconds();
+        const result = inst.run();
+        const duration = (new Date()).getMilliseconds() - start;
+        if (result) {
+            if (result.a) { console.log("Part A", result.a); }
+            if (result.b) { console.log("Part B", result.b); }
+        }
+        console.log("\nTotal time taken: " + duration + "ms")
+        console.log(inst.getBenchmarks()
+            .map(benchMark => benchMark.label + ": " + benchMark.time + "ms")
+            .join(", ")
+        );
+    } else {
+        console.error('Unable to locate input file: ', inputFile);
     }
 
-    inst.run();
 }

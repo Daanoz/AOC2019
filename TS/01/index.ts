@@ -1,27 +1,28 @@
-import { Puzzle, Runner, BasePuzzle } from '../shared/';
+import { Puzzle, Runner, BasePuzzle, Result } from '../shared/';
 
-class PuzzleSolution extends BasePuzzle implements Puzzle {
+export class PuzzleSolution extends BasePuzzle implements Puzzle {
     public run() {
+        const result: Result = {};
         const input: number[] = this.getInputAsRows().map(r => parseInt(r, 10));
-        
+
         const fuel = input
             .map(n => this.calculateFuel(n))
             .reduce((cur, n) => cur + n, 0);
 
-        console.log("Part A", fuel);
-
+        result.a = fuel;
 
         const totalFuel = input
-            .map(n => this.calculateRecusiveFuel(n))
+            .map(n => this.calculateRecursiveFuel(n))
             .reduce((cur, n) => cur + n, 0);
 
-        console.log("Part B", totalFuel); 
+        result.b = totalFuel;
+        return result;
     }
 
-    private calculateRecusiveFuel(mass: number): number {
+    private calculateRecursiveFuel(mass: number): number {
         const fuel = this.calculateFuel(mass);
-        if (fuel <= 0) { return 0; } 
-        return fuel + this.calculateRecusiveFuel(fuel);
+        if (fuel <= 0) { return 0; }
+        return fuel + this.calculateRecursiveFuel(fuel);
     }
 
     private calculateFuel(mass: number): number {
