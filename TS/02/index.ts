@@ -1,4 +1,5 @@
 import { Puzzle, Runner, BasePuzzle, Result } from '../shared/';
+import { IntCodeProcessor } from './int-code-processor.class';
 
 export class PuzzleSolution extends BasePuzzle implements Puzzle {
     public args = {
@@ -13,7 +14,7 @@ export class PuzzleSolution extends BasePuzzle implements Puzzle {
 
         const input: number[] = this.getInputAsRows(',').map(r => parseInt(r, 10));
 
-        result.a = this.executeWithArgs(input, this.args.noun, this.args.verb)[this.args.position];
+        result.a = this.executeWithArgs(input, this.args.noun, this.args.verb, this.args.position);
         result.b = this.findInputForOutput(input, this.args.target);
 
         return result;
@@ -22,8 +23,8 @@ export class PuzzleSolution extends BasePuzzle implements Puzzle {
     private findInputForOutput(input: number[], output: number): number {
         for (let noun = 0; noun <= 99; noun++) {
             for (let verb = 0; verb <= 99; verb++) {
-                const result = this.executeWithArgs(input, noun, verb);
-                if (result[0] === output) {
+                const result = this.executeWithArgs(input, noun, verb, 0);
+                if (result === output) {
                     return (100 * noun + verb);
                 }
             }
@@ -31,11 +32,13 @@ export class PuzzleSolution extends BasePuzzle implements Puzzle {
         return -1;
     }
 
-    private executeWithArgs(instructions: number[], noun: number, verb: number): number[] {
+    private executeWithArgs(instructions: number[], noun: number, verb: number, position: number): number {
         const input = [...instructions];
         input[1] = noun;
         input[2] = verb;
-        return this.execute(input);
+        const processor = new IntCodeProcessor(input);
+        processor.execute();
+        return processor.readPosition(position);
     }
 
     private execute(instructions: number[]): number[] {
