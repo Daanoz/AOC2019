@@ -2,7 +2,10 @@ export class IntCodeProcessor {
     private instructionPointer = 0;
     private instructions: number[] = [];
     private input: number[] = [];
+    private inputIndex = 0;
     private output: number[] = [];
+    private breakOnOutput = false;
+    private hasExited = false;
 
     private opCodeMap: Map<number, (pm: number) => boolean> = new Map([
         [1, (pm) => this.opCodeAdd(pm)],
@@ -21,18 +24,29 @@ export class IntCodeProcessor {
     }
 
     public setInput(input: number[]) {
+        this.inputIndex = 0;
         this.input = input;
+    }
+
+    public appendInput(input: number) {
+        this.input.push(input);
     }
 
     public getOutput() {
         return this.output;
     }
 
+    public getHasExited() {
+        return this.hasExited;
+    }
+
     public readPosition(index: number) {
         return this.instructions[index];
     }
 
-    public execute() {
+    public execute(breakOnOutput?: boolean) {
+        this.output = [];
+        this.breakOnOutput = breakOnOutput || false;
         while(this.next()) {}
     }
 
@@ -64,7 +78,8 @@ export class IntCodeProcessor {
 
     private opCodeInput(): boolean {
         const outputAddress = this.instructions[this.instructionPointer + 1];
-        this.instructions[outputAddress] = this.input[0];
+        this.instructions[outputAddress] = this.input[this.inputIndex % this.input.length];
+        this.inputIndex++;
         this.instructionPointer += 2;
         return true;
     }
@@ -73,6 +88,10 @@ export class IntCodeProcessor {
         const parameters = this.readParams(paramModes, 1);
         this.output.push(parameters[0]);
         this.instructionPointer += 2;
+
+        if (this.breakOnOutput) { // end result is found
+            return false;
+        }
         return true;
     }
 
@@ -113,6 +132,7 @@ export class IntCodeProcessor {
     }
 
     private opCodeComplete(): boolean {
+        this.hasExited = true;
         return false;
     }
 

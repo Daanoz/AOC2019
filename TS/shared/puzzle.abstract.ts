@@ -14,10 +14,11 @@ export abstract class BasePuzzle {
         return this.getInputAsRows(splitByRow).map(row => row.split(splitByCol || ','));
     }
 
-    protected timed(label: string, func: Function) {
+    protected timed<T>(label: string, func: Function): T {
         this.timerStart(label);
-        func();
+        const result = func();
         this.timerEnd(label);
+        return result as T;
     }
 
     protected timerStart(label: string) {

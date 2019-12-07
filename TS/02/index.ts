@@ -40,31 +40,6 @@ export class PuzzleSolution extends BasePuzzle implements Puzzle {
         processor.execute();
         return processor.readPosition(position);
     }
-
-    private execute(instructions: number[]): number[] {
-        const input = [...instructions];
-        let instructionPointer = 0;
-        let isFinished = false;
-        while (!isFinished) {
-            const opCode = input[instructionPointer];
-            const parameters = input.slice(instructionPointer + 1, instructionPointer + 4);
-            switch(opCode) {
-                case 1 : {
-                    input[parameters[2]] = input[parameters[0]] + input[parameters[1]];
-                } break;
-                case 2 : {
-                    input[parameters[2]] = input[parameters[0]] * input[parameters[1]];
-                } break;
-                case 99: { isFinished = true; } break;
-                case undefined: {
-                    console.error('Program failure');
-                    isFinished = true;
-                } break;
-            }
-            instructionPointer += 4;
-        }
-        return input;
-    }
 }
 
 Runner(PuzzleSolution);
