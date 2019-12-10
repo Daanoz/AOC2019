@@ -49,16 +49,19 @@ class Grid {
     }
 
     public print() {
-        console.log('.'.repeat((this.maxX - this.minX) + 3));
+        let body = '\n';
+        body += '.'.repeat((this.maxX - this.minX) + 3) + '\n';
         for(let y = this.maxY; y >= this.minY; y--) {
             let rowLine = '.';
             for(let x = this.minX; x <= this.maxX; x++) {
-                rowLine += this.getCell(x, y);
+                const cell = this.getCell(x, y);
+                rowLine += !cell.wire || cell.wire < 0 ? ' ' : cell.wire;
             }
             rowLine += '.';
-            console.log(rowLine);
+            body += rowLine + '\n';
         }
-        console.log('.'.repeat((this.maxX - this.minX) + 3));
+        body += '.'.repeat((this.maxX - this.minX) + 3) + '\n';
+        console.log(body);
     }
 
     public locateCrossingWithShortestPath(): number {
@@ -132,6 +135,8 @@ export class PuzzleSolution extends BasePuzzle implements Puzzle {
 
         this.timed("Generate paths", () =>
             input.forEach((path, index) => this.drawLineOnGrid(grid, index, path)));
+
+        grid.print();
 
         this.timed("Part A", () =>
             result.a = grid.locateClosestCrossing(0, 0));

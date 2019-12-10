@@ -6,16 +6,18 @@ export class IntCodeProcessor {
     private output: number[] = [];
     private breakOnOutput = false;
     private hasExited = false;
+    private relativeBase = 0;
 
     private opCodeMap: Map<number, (pm: number) => boolean> = new Map([
         [1, (pm) => this.opCodeAdd(pm)],
         [2, (pm) => this.opCodeMultiply(pm)],
-        [3, (pm) => this.opCodeInput()],
+        [3, (pm) => this.opCodeInput(pm)],
         [4, (pm) => this.opCodeOutput(pm)],
         [5, (pm) => this.opCodeJumpIfTrue(pm)],
         [6, (pm) => this.opCodeJumpIfFalse(pm)],
         [7, (pm) => this.opCodeLessThen(pm)],
         [8, (pm) => this.opCodeEquals(pm)],
+        [9, (pm) => this.opCodeAdjustRelativeBase(pm)],
         [99, (pm) => this.opCodeComplete()],
     ])
 
@@ -41,7 +43,7 @@ export class IntCodeProcessor {
     }
 
     public readPosition(index: number) {
-        return this.instructions[index];
+        return this.readAddress(index);
     }
 
     public execute(breakOnOutput?: boolean) {
@@ -51,8 +53,9 @@ export class IntCodeProcessor {
     }
 
     private next(): boolean {
-        const opCode = this.instructions[this.instructionPointer] % 100;
-        const paramMode = Math.floor(this.instructions[this.instructionPointer] / 100);
+        const instruction = this.readAddress(this.instructionPointer);
+        const opCode = instruction % 100;
+        const paramMode = Math.floor(instruction / 100);
         if (!this.opCodeMap.has(opCode)) {
             console.error('Program failure, unkown opCode:', opCode);
             return false;
@@ -61,32 +64,30 @@ export class IntCodeProcessor {
     }
 
     private opCodeAdd(paramModes: number): boolean {
-        const parameters = this.readParams(paramModes, 2);
-        const outputAddress = this.instructions[this.instructionPointer + 3];
-        this.instructions[outputAddress] = parameters[0] + parameters[1];
+        const parameters = this.parseParams(paramModes, 3);
+        this.writeAddress(parameters[2].address!, parameters[0].value + parameters[1].value);
         this.instructionPointer += 4;
         return true;
     }
 
     private opCodeMultiply(paramModes: number): boolean {
-        const parameters = this.readParams(paramModes, 2);
-        const outputAddress = this.instructions[this.instructionPointer + 3];
-        this.instructions[outputAddress] = parameters[0] * parameters[1];
+        const parameters = this.parseParams(paramModes, 3);
+        this.writeAddress(parameters[2].address!, parameters[0].value * parameters[1].value);
         this.instructionPointer += 4;
         return true;
     }
 
-    private opCodeInput(): boolean {
-        const outputAddress = this.instructions[this.instructionPointer + 1];
-        this.instructions[outputAddress] = this.input[this.inputIndex % this.input.length];
+    private opCodeInput(paramModes: number): boolean {
+        const parameters = this.parseParams(paramModes, 1);
+        this.writeAddress(parameters[0].address!, this.input[this.inputIndex % this.input.length]);
         this.inputIndex++;
         this.instructionPointer += 2;
         return true;
     }
 
     private opCodeOutput(paramModes: number): boolean {
-        const parameters = this.readParams(paramModes, 1);
-        this.output.push(parameters[0]);
+        const parameters = this.parseParams(paramModes, 1);
+        this.output.push(parameters[0].value);
         this.instructionPointer += 2;
 
         if (this.breakOnOutput) { // end result is found
@@ -96,9 +97,9 @@ export class IntCodeProcessor {
     }
 
     private opCodeJumpIfTrue(paramModes: number): boolean {
-        const parameters = this.readParams(paramModes, 2);
-        if (parameters[0] !== 0) {
-            this.instructionPointer = parameters[1];
+        const parameters = this.parseParams(paramModes, 2);
+        if (parameters[0].value !== 0) {
+            this.instructionPointer = parameters[1].value;
         } else {
             this.instructionPointer += 3;
         }
@@ -106,9 +107,9 @@ export class IntCodeProcessor {
     }
 
     private opCodeJumpIfFalse(paramModes: number): boolean {
-        const parameters = this.readParams(paramModes, 2);
-        if (parameters[0] === 0) {
-            this.instructionPointer = parameters[1];
+        const parameters = this.parseParams(paramModes, 2);
+        if (parameters[0].value === 0) {
+            this.instructionPointer = parameters[1].value;
         } else {
             this.instructionPointer += 3;
         }
@@ -116,18 +117,23 @@ export class IntCodeProcessor {
     }
 
     private opCodeLessThen(paramModes: number): boolean {
-        const parameters = this.readParams(paramModes, 2);
-        const outputAddress = this.instructions[this.instructionPointer + 3];
-        this.instructions[outputAddress] = parameters[0] < parameters[1] ? 1 : 0;
+        const parameters = this.parseParams(paramModes, 3);
+        this.writeAddress(parameters[2].address!, parameters[0].value < parameters[1].value ? 1 : 0);
         this.instructionPointer += 4;
         return true;
     }
 
     private opCodeEquals(paramModes: number): boolean {
-        const parameters = this.readParams(paramModes, 2);
-        const outputAddress = this.instructions[this.instructionPointer + 3];
-        this.instructions[outputAddress] = parameters[0] === parameters[1] ? 1 : 0;
+        const parameters = this.parseParams(paramModes, 3);
+        this.writeAddress(parameters[2].address!, parameters[0].value === parameters[1].value ? 1 : 0);
         this.instructionPointer += 4;
+        return true;
+    }
+
+    private opCodeAdjustRelativeBase(paramModes: number): boolean {
+        const parameters = this.parseParams(paramModes, 1);
+        this.relativeBase += parameters[0].value;
+        this.instructionPointer += 2;
         return true;
     }
 
@@ -136,18 +142,40 @@ export class IntCodeProcessor {
         return false;
     }
 
-    private readParams(paramModes: number, paramCount: number): number[] {
-        const parameters: number[] = [];
+    private parseParams(paramModes: number, paramCount: number): {address?: number, value: number}[] {
+        const parameters: {address?: number, value: number}[] = [];
         for (let index = this.instructionPointer + 1; index <= this.instructionPointer + paramCount; index++) {
-            const value = this.instructions[index];
+            const value = this.readAddress(index);
             const paramMode = paramModes % 10;
             paramModes = Math.floor(paramModes / 10);
-            if (paramMode === 1) {
-                parameters.push(value);
-            } else {
-                parameters.push(this.instructions[value]);
+            switch (paramMode) {
+                case 2: { parameters.push({
+                    address: this.relativeBase + value,
+                    value: this.readAddress(this.relativeBase + value)
+                }); } break;
+                case 1: { parameters.push({
+                    value
+                }); } break;
+                case 0: { parameters.push({
+                    address: value,
+                    value: this.readAddress(value)
+                }); } break;
+                default: {
+                    throw "Unknown paramMode " + paramMode;
+                }
             }
         }
         return parameters;
+    }
+
+    private readAddress(address: number): number {
+        const result = this.instructions[address];
+        if (!result) {
+            return 0;
+        }
+        return result;
+    }
+    private writeAddress(address: number, value: number) {
+        this.instructions[address] = value;
     }
 }
