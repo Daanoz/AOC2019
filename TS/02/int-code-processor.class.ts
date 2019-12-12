@@ -34,15 +34,18 @@ export class IntCodeProcessor {
         this.input.push(input);
     }
 
-    public getOutput() {
+    public getOutput(): number[] {
         return this.output;
     }
+    public getLastOutput(): number {
+        return this.output[this.output.length - 1];
+    }
 
-    public getHasExited() {
+    public getHasExited(): boolean {
         return this.hasExited;
     }
 
-    public readPosition(index: number) {
+    public readPosition(index: number): number {
         return this.readAddress(index);
     }
 
