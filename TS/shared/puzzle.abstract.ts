@@ -23,7 +23,7 @@ export abstract class BasePuzzle {
 
     protected timerStart(label: string) {
         const existingTiming = this.timings.get(label);
-        const startInMs = new Date().getMilliseconds();
+        const startInMs = new Date().getTime();
         if (existingTiming) {
             existingTiming.duration += existingTiming.end - existingTiming.start;
             existingTiming.start = startInMs;
@@ -39,7 +39,7 @@ export abstract class BasePuzzle {
     protected timerEnd(label: string) {
         const existingTiming = this.timings.get(label);
         if (existingTiming) {
-            existingTiming.end = new Date().getMilliseconds();
+            existingTiming.end = new Date().getTime();
         }
     }
     public getBenchmarks(): {label: string, time: number}[] {

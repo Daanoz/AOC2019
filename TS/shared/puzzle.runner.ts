@@ -24,20 +24,37 @@ export const Runner = (PuzzleClass: Constructor<Puzzle>) => {
     if (fs.existsSync(path.join(PuzzleDir, inputFile))) {
         inst.setInput(fs.readFileSync(path.join(PuzzleDir, inputFile), {encoding: 'utf-8'}));
 
-        const start = (new Date()).getMilliseconds();
+        const start = (new Date()).getTime();
         const result = inst.run();
-        const duration = (new Date()).getMilliseconds() - start;
+
+        const resultPromises = [];
         if (result) {
-            if (result.a) { console.log("Part A", result.a); }
-            if (result.b) { console.log("Part B", result.b); }
+            if (result.a) {
+                resultPromises.push(asPromise(result.a).then(res => console.log("Part A", res)))
+            }
+            if (result.b) {
+                resultPromises.push(asPromise(result.b).then(res => console.log("Part B", res)))
+            }
         }
-        console.log("\nTotal time taken: " + duration + "ms")
-        console.log(inst.getBenchmarks()
-            .map(benchMark => benchMark.label + ": " + benchMark.time + "ms")
-            .join(", ")
-        );
+        const complete = () => {
+            const duration = (new Date()).getTime() - start;
+            console.log("\nTotal time taken: " + duration + "ms")
+            console.log(inst.getBenchmarks()
+                .map(benchMark => benchMark.label + ": " + benchMark.time + "ms")
+                .join(", ")
+            );
+        };
+        Promise.all(resultPromises).then(complete);
     } else {
         console.error('Unable to locate input file: ', inputFile);
     }
 
+}
+
+const asPromise = (val: string | number | Promise<string | number | void>) => {
+    if (val && val instanceof Promise) {
+        return val;
+    } else {
+        return Promise.resolve(val);
+    }
 }

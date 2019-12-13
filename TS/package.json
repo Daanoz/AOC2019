@@ -5,6 +5,7 @@
   "main": "index.ts",
   "scripts": {
     "start": "ts-node index.ts",
+    "start13": "ts-node 13/index.ts --input 13/input",
     "test": "jest"
   },
   "author": "",

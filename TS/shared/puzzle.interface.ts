@@ -1,6 +1,6 @@
 export interface Result {
-    a?: string | number,
-    b?: string | number
+    a?: string | number | Promise<string | number | void>,
+    b?: string | number | Promise<string | number | void>
 }
 
 export interface Puzzle {

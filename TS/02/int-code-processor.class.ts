@@ -5,6 +5,7 @@ export class IntCodeProcessor {
     private inputIndex = 0;
     private output: number[] = [];
     private breakOnOutput = false;
+    private breakOnInput = false;
     private hasExited = false;
     private relativeBase = 0;
 
@@ -49,9 +50,10 @@ export class IntCodeProcessor {
         return this.readAddress(index);
     }
 
-    public execute(breakOnOutput?: boolean) {
+    public execute(breakOnOutput?: boolean, breakOnInput?: boolean) {
         this.output = [];
         this.breakOnOutput = breakOnOutput || false;
+        this.breakOnInput = breakOnInput || false;
         while(this.next()) {}
     }
 
@@ -82,7 +84,10 @@ export class IntCodeProcessor {
 
     private opCodeInput(paramModes: number): boolean {
         const parameters = this.parseParams(paramModes, 1);
-        this.writeAddress(parameters[0].address!, this.input[this.inputIndex % this.input.length]);
+        if (this.inputIndex > this.input.length && this.breakOnInput) {
+            return false;
+        }
+        this.writeAddress(parameters[0].address!, this.input[this.inputIndex]);
         this.inputIndex++;
         this.instructionPointer += 2;
         return true;
