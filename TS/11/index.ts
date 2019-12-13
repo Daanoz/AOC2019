@@ -71,7 +71,6 @@ class HullPrinter {
             body += row + '\n';
         }
         return body;
-        console.log(body);
     }
 }
 
