@@ -91,11 +91,11 @@ export class PuzzleSolution extends BasePuzzle implements Puzzle {
         this.ORE = this.elements.get('ORE')!;
         this.FUEL = this.elements.get('FUEL')!;
 
-        const oreForOneFuel = this.oreForFuel(1);
+        const oreForOneFuel = this.timed<number>('part A', () => this.oreForFuel(1));
         result.a = oreForOneFuel;
         const targetAmount = 1000000000000;
         let minimumAmountOfFuel = Math.round(targetAmount / oreForOneFuel);
-        result.b = this.findFuelForOre(minimumAmountOfFuel, targetAmount, 100000);
+        result.b = this.timed('part B', () => this.findFuelForOre(minimumAmountOfFuel, targetAmount, 100000));
 
         return result;
     }
