@@ -1,4 +1,4 @@
-import { Puzzle, Runner, BasePuzzle, Result } from '../shared/';
+import { Puzzle, Runner, BasePuzzle, Result, EndlessGrid } from '../shared/';
 import { IntCodeProcessor } from '../02/int-code-processor.class';
 
 enum CellType {
@@ -8,7 +8,7 @@ enum CellType {
 
 class HullPrinter {
     private proc: IntCodeProcessor;
-    private grid: Map<number, Map<number, CellType>> = new Map();
+    private grid: EndlessGrid<CellType> = new EndlessGrid();
 
     private position = [0, 0];
     private direction = 0;
@@ -37,40 +37,16 @@ class HullPrinter {
     }
 
     public countCells(): number {
-        return Array.from(this.grid.keys()).reduce((totalSum, y) =>
-            totalSum + Array.from(this.grid.get(y)!.values()).length
-        , 0);
+        return this.grid.count();
     }
-
     private getCell(x: number, y: number): CellType {
-        if (!this.grid.has(y)) { return CellType.BLACK; }
-        if (!this.grid.get(y)!.has(x)) { return CellType.BLACK; }
-        return this.grid.get(y)!.get(x)!
+        return this.grid.get(x, y, CellType.BLACK)!;
     }
     public setCell(x: number, y: number, value: CellType) {
-        if (!this.grid.has(y)) { this.grid.set(y, new Map()); }
-        this.grid.get(y)!.set(x, value)
+        return this.grid.set(x, y, value)!;
     }
-
     public print(): string {
-        let rowKeys = Array.from(this.grid.keys());
-        let minX = 0;
-        let maxX = 0;
-        rowKeys.forEach(y => {
-            minX = Math.min(minX, ...Array.from(this.grid.get(y)!.keys()));
-            maxX = Math.max(maxX, ...Array.from(this.grid.get(y)!.keys()));
-        });
-
-        let body = '';
-        for (let y = Math.max(...rowKeys); y >= Math.min(...rowKeys); y--) {
-            let row = '';
-            let gridRow = this.grid.get(y)!;
-            for (let x = minX; x <= maxX; x++) {
-                row += gridRow.has(x) ? gridRow.get(x)! : CellType.BLACK
-            }
-            body += row + '\n';
-        }
-        return body;
+        return this.grid.toString();
     }
 }
 

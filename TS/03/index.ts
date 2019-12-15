@@ -1,4 +1,4 @@
-import { Puzzle, Runner, BasePuzzle, Result } from '../shared/';
+import { Puzzle, Runner, BasePuzzle, Result, EndlessGrid, GridCell } from '../shared/';
 
 enum CellType {
     EMPTY = '.',
@@ -10,58 +10,44 @@ enum CellType {
     JUNCTION = '#'
 }
 
-interface Cell {
-    wire?: number,
-    length?: number,
-    value: CellType
+class Cell implements GridCell {
+    public wire?: number;
+    public length?: number;
+    constructor(public value: CellType, opts?: {wire?: number, length?: number}) {
+        if (opts && opts.wire) { this.wire = opts.wire; }
+        if (opts && opts.length) { this.length = opts.length; }
+    }
+    public toString() {
+        return this.value;
+    }
 }
 
 class Grid {
-    public minX = 0;
-    public maxX = 0;
-    public minY = 0;
-    public maxY = 0;
-
-    public rowsAndCols: Map<number, Map<number, Cell>> = new Map([[0, new Map([[0, {
-        value: CellType.EMPTY
-    }]])]]);
-
+    private grid: EndlessGrid<Cell> = new EndlessGrid();
     private crossings: {x: number, y: number, combinedLength: number}[] = [];
 
     constructor() {
-        this.setCell(0, 0, {value: CellType.START});
+        this.setCell(0, 0, new Cell(CellType.START));
     }
 
     public drawLine(from: [number, number], to: [number, number], wire: number, type: CellType, wireLength: number) {
         for(let y = from[1]; y !== to[1]; y += from[1] < to[1] ? 1 : -1) {
             if (y != from[1]) {
                 wireLength++;
-                this.setCell(from[0], y, {wire, value: type, length: wireLength});
+                this.setCell(from[0], y, new Cell(type, {wire, length: wireLength}));
             }
         }
         for(let x = from[0]; x !== to[0]; x += from[0] < to[0] ? 1 : -1) {
             if (x != from[0]) {
                 wireLength++;
-                this.setCell(x, from[1], {wire, value: type, length: wireLength});
+                this.setCell(x, from[1], new Cell(type, {wire, length: wireLength}));
             }
         }
-        this.setCell(to[0], to[1], {wire, value: CellType.CORNER, length: wireLength});
+        this.setCell(to[0], to[1], new Cell(CellType.CORNER, {wire, length: wireLength}));
     }
 
     public print() {
-        let body = '\n';
-        body += '.'.repeat((this.maxX - this.minX) + 3) + '\n';
-        for(let y = this.maxY; y >= this.minY; y--) {
-            let rowLine = '.';
-            for(let x = this.minX; x <= this.maxX; x++) {
-                const cell = this.getCell(x, y);
-                rowLine += !cell.wire || cell.wire < 0 ? ' ' : cell.wire;
-            }
-            rowLine += '.';
-            body += rowLine + '\n';
-        }
-        body += '.'.repeat((this.maxX - this.minX) + 3) + '\n';
-        console.log(body);
+        console.log(this.grid.toString());
     }
 
     public locateCrossingWithShortestPath(): number {
@@ -86,41 +72,27 @@ class Grid {
     }
 
     private getCell(x: number, y: number): Cell {
-        const row = this.rowsAndCols.get(y);
-        if (!row) { return {wire: -1, value: CellType.EMPTY}; }
-        return (row.get(x) as Cell) || {wire: -1, value: CellType.EMPTY};
+        return this.grid.get(x, y, new Cell(CellType.EMPTY))!;
     }
 
     private setCell(x: number, y: number, value: Cell) {
-        this.minX = Math.min(x, this.minX);
-        this.maxX = Math.max(x, this.maxX);
-        this.minY = Math.min(y, this.minY);
-        this.maxY = Math.max(y, this.maxY);
-
-        let row = this.rowsAndCols.get(y);
-        if (!row) {
-            row = new Map();
-            this.rowsAndCols.set(y, row);
-        }
-        const current = row.get(x) || {value: CellType.EMPTY};
+        const current = this.getCell(x, y);
         if (current.value === CellType.EMPTY) {
-            row.set(x, value);
-        }
-        else if (
+            this.grid.set(x, y, value);
+        } else if (
             current.value === CellType.CORNER ||
             current.value === CellType.HORIZONTAL ||
             current.value === CellType.VERTICAL
         ) {
             if (current.wire != value.wire) {
-                row.set(x, {wire: -1, value: CellType.CROSSING});
+                this.grid.set(x, y, new Cell(CellType.CROSSING, {wire: -1}));
                 this.crossings.push({
                     x, y, combinedLength: (current.length || 0) + (value.length || 0)
                 });
             } else {
-                row.set(x, {...current, value: CellType.JUNCTION});
+                this.grid.set(x, y, new Cell(CellType.JUNCTION, {wire: current.wire, length: current.length}));
             }
-        }
-        else {
+        } else {
             console.error('Found unexpected: ', current, ' at ', x, y);
         }
     }
@@ -135,8 +107,6 @@ export class PuzzleSolution extends BasePuzzle implements Puzzle {
 
         this.timed("Generate paths", () =>
             input.forEach((path, index) => this.drawLineOnGrid(grid, index, path)));
-
-        grid.print();
 
         this.timed("Part A", () =>
             result.a = grid.locateClosestCrossing(0, 0));
