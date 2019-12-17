@@ -8,7 +8,7 @@ export abstract class BasePuzzle {
         return this.input;
     }
     protected getInputAsRows(splitBy?: string | RegExp): string[] {
-        return this.getInput().split(splitBy || /\r\n|\n|\r/);
+        return this.getInput().split(splitBy === undefined ? /\r\n|\n|\r/ : splitBy);
     }
     protected getInputAsTable(splitByCol?: string | RegExp, splitByRow?: string | RegExp): string[][] {
         return this.getInputAsRows(splitByRow).map(row => row.split(splitByCol === undefined ? ',': splitByCol));
