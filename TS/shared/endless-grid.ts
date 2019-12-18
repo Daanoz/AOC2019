@@ -38,6 +38,14 @@ export class EndlessGrid<T extends string | GridCell> {
         , 0);
     }
 
+    public forEach(callbackfn: (value: T, index: [number, number]) => void, defaultValue?: any): void {
+        for(let y = this.yRange[1]; y >= this.yRange[0]; y--) {
+            for(let x = this.xRange[0]; x <= this.xRange[1]; x++) {
+                callbackfn(this.get(x, y, defaultValue)!, [x, y]);
+            }
+        }
+    }
+
     public toString(): string {
         let body = '';
         for(let y = this.yRange[1]; y >= this.yRange[0]; y--) {
