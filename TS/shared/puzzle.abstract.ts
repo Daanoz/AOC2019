@@ -1,3 +1,5 @@
+import { EndlessGrid } from "./endless-grid";
+
 export abstract class BasePuzzle {
     private timings: Map<string, {start: number, end: number, duration: number}> = new Map();
     private input: string = '';
@@ -12,6 +14,11 @@ export abstract class BasePuzzle {
     }
     protected getInputAsTable(splitByCol?: string | RegExp, splitByRow?: string | RegExp): string[][] {
         return this.getInputAsRows(splitByRow).map(row => row.split(splitByCol === undefined ? ',': splitByCol));
+    }
+    protected getInputAsGrid(): EndlessGrid<string> {
+        const grid = new EndlessGrid<string>();
+        this.getInputAsTable('').forEach((row, y) => row.forEach((cell, x) => grid.set(x, y * -1, cell)));
+        return grid;
     }
 
     protected timed<T>(label: string, func: Function): T {

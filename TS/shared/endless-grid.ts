@@ -38,12 +38,68 @@ export class EndlessGrid<T extends string | GridCell> {
         , 0);
     }
 
+    public countBy(callbackfn: (value: T, index: [number, number]) => boolean): number {
+        return this.filter(callbackfn).length;
+    }
+
+
     public forEach(callbackfn: (value: T, index: [number, number]) => void, defaultValue?: any): void {
         for(let y = this.yRange[1]; y >= this.yRange[0]; y--) {
             for(let x = this.xRange[0]; x <= this.xRange[1]; x++) {
                 callbackfn(this.get(x, y, defaultValue)!, [x, y]);
             }
         }
+    }
+
+    public clone(callbackfn?: (value: T, index: [number, number]) => T): EndlessGrid<T> {
+        return this.map<T>(callbackfn || (a => a));
+    }
+
+    public map<T2 extends string | GridCell>(callbackfn: (value: T, index: [number, number]) => T2): EndlessGrid<T2> {
+        const mappedGrid = new EndlessGrid<T2>();
+        for(let y = this.yRange[1]; y >= this.yRange[0]; y--) {
+            for(let x = this.xRange[0]; x <= this.xRange[1]; x++) {
+                if (this.has(x, y)) {
+                    mappedGrid.set(x, y, callbackfn(this.get(x, y)!, [x, y]));
+                }
+            }
+        }
+        return mappedGrid;
+    }
+
+    public filter(callbackfn: (value: T, index: [number, number]) => boolean): T[] {
+        const results: T[] = [];
+        for(let y = this.yRange[1]; y >= this.yRange[0]; y--) {
+            for(let x = this.xRange[0]; x <= this.xRange[1]; x++) {
+                if (this.has(x, y)) {
+                    const cell = this.get(x, y)!;
+                    if (callbackfn(cell, [x, y])) {
+                        results.push(cell);
+                    }
+                }
+            }
+        }
+        return results;
+    }
+
+    public findIndex(callbackfn: (value: T, index: [number, number]) => boolean): [number, number] | undefined {
+        for(let y = this.yRange[1]; y >= this.yRange[0]; y--) {
+            for(let x = this.xRange[0]; x <= this.xRange[1]; x++) {
+                if (this.has(x, y)) {
+                    const cell = this.get(x, y)!;
+                    if (callbackfn(cell, [x, y])) {
+                        return [x, y];
+                    }
+                }
+            }
+        }
+        return undefined;
+    }
+
+    public find(callbackfn: (value: T, index: [number, number]) => boolean): T | undefined {
+        let index = this.findIndex(callbackfn);
+        if (index) { return this.get(index[0], index[1])!; }
+        return undefined;
     }
 
     public toString(): string {
