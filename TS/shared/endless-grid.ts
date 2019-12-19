@@ -27,6 +27,28 @@ export class EndlessGrid<T extends string | GridCell> {
         return this.grid.get(y)!.get(x) || defaultValue
     }
 
+    public getRow(y: number): T[] {
+        const results: T[] = [];
+        if (this.grid.has(y)) {
+            for(let x = this.xRange[0]; x <= this.xRange[1]; x++) {
+                if (this.has(x, y)) {
+                    results.push(this.get(x, y)!);
+                }
+            }
+        }
+        return results;
+    }
+
+    public getColumn(x: number): T[] {
+        const results: T[] = [];
+        for(let y = this.yRange[1]; y >= this.yRange[0]; y--) {
+            if (this.has(x, y)) {
+                results.push(this.get(x, y)!);
+            }
+        }
+        return results;
+    }
+
     public has(x: number, y: number): boolean {
         if (!this.grid.has(y)) { return false; }
         return this.grid.get(y)!.has(x);
@@ -67,6 +89,34 @@ export class EndlessGrid<T extends string | GridCell> {
         return mappedGrid;
     }
 
+    public filterRow(y: number, callbackfn: (value: T, index: [number, number]) => boolean): T[] {
+        const results: T[] = [];
+        if (this.grid.has(y)) {
+            for(let x = this.xRange[0]; x <= this.xRange[1]; x++) {
+                if (this.has(x, y)) {
+                    const cell = this.get(x, y)!;
+                    if (callbackfn(cell, [x, y])) {
+                        results.push(cell);
+                    }
+                }
+            }
+        }
+        return results;
+    }
+
+    public filterColumn(x: number, callbackfn: (value: T, index: [number, number]) => boolean): T[] {
+        const results: T[] = [];
+        for(let y = this.yRange[1]; y >= this.yRange[0]; y--) {
+            if (this.has(x, y)) {
+                const cell = this.get(x, y)!;
+                if (callbackfn(cell, [x, y])) {
+                    results.push(cell);
+                }
+            }
+        }
+        return results;
+    }
+
     public filter(callbackfn: (value: T, index: [number, number]) => boolean): T[] {
         const results: T[] = [];
         for(let y = this.yRange[1]; y >= this.yRange[0]; y--) {
@@ -75,6 +125,21 @@ export class EndlessGrid<T extends string | GridCell> {
                     const cell = this.get(x, y)!;
                     if (callbackfn(cell, [x, y])) {
                         results.push(cell);
+                    }
+                }
+            }
+        }
+        return results;
+    }
+
+    public filterIndex(callbackfn: (value: T, index: [number, number]) => boolean): [number, number][] {
+        const results: [number, number][] = [];
+        for(let y = this.yRange[1]; y >= this.yRange[0]; y--) {
+            for(let x = this.xRange[0]; x <= this.xRange[1]; x++) {
+                if (this.has(x, y)) {
+                    const cell = this.get(x, y)!;
+                    if (callbackfn(cell, [x, y])) {
+                        results.push([x, y]);
                     }
                 }
             }
@@ -102,11 +167,11 @@ export class EndlessGrid<T extends string | GridCell> {
         return undefined;
     }
 
-    public toString(): string {
+    public toString(xStart?: number, yStart?: number, xEnd?: number, yEnd?: number): string {
         let body = '';
-        for(let y = this.yRange[1]; y >= this.yRange[0]; y--) {
+        for(let y = yEnd || this.yRange[1]; y >= (yStart || this.yRange[0]); y--) {
             let row = '';
-            for(let x = this.xRange[0]; x <= this.xRange[1]; x++) {
+            for(let x = xStart || this.xRange[0]; x <= (xEnd || this.xRange[1]); x++) {
                 let cell = this.get(x, y, ' ')
                 if (typeof cell === 'string') {
                     row += cell;
