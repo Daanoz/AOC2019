@@ -10,7 +10,6 @@ class MazeCell implements GridCell {
         this.passable = this.type !== '#';
     }
 
-    public resetClone() { return new MazeCell(this.type); }
     public reset() { return this.visited = false; }
 
     public markVisited() { this.visited = true; }

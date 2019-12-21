@@ -27,6 +27,9 @@ export class EndlessGrid<T extends string | GridCell> {
         return this.grid.get(y)!.get(x) || defaultValue
     }
 
+    public getHeight(): number { return Math.abs(this.yRange[1] - this.yRange[0]); }
+    public getWidth():  number { return Math.abs(this.xRange[1] - this.xRange[0]); }
+
     public getRow(y: number): T[] {
         const results: T[] = [];
         if (this.grid.has(y)) {
