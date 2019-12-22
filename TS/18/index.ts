@@ -1,6 +1,5 @@
 import { Puzzle, Runner, BasePuzzle, Result, GridCell, EndlessGrid } from '../shared/';
 import memoize from 'memoizee';
-import { start } from 'repl';
 
 class MazeCell implements GridCell {
     private visited = false;

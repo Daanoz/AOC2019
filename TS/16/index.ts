@@ -1,12 +1,5 @@
 import { Puzzle, Runner, BasePuzzle, Result } from '../shared/';
 
-class LLEntry {
-    public next?: LLEntry;
-    constructor(public val: number, public index: number) {
-
-    }
-}
-
 export class PuzzleSolution extends BasePuzzle implements Puzzle {
     public args = {
         iterations : 100,
