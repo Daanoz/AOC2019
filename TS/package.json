@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@types/memoizee": "^0.4.3",
+    "big-integer": "^1.6.48",
     "commander": "^4.0.1",
     "lodash": "^4.17.15",
     "memoizee": "^0.4.14",
