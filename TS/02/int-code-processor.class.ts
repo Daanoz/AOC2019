@@ -2,8 +2,8 @@ export class IntCodeProcessor {
     private instructionPointer = 0;
     private instructions: number[] = [];
     private input: number[] = [];
-    private inputIndex = 0;
     private output: number[] = [];
+    private inputValueOnEmpty?: number;
     private breakOnOutput = false;
     private breakOnInput = false;
     private hasExited = false;
@@ -27,16 +27,22 @@ export class IntCodeProcessor {
     }
 
     public setInput(input: number[]) {
-        this.inputIndex = 0;
         this.input = input;
     }
-
-    public appendInput(input: number) {
-        this.input.push(input);
+    public setInputValueOnEmpty(emptyInput: number) {
+        this.inputValueOnEmpty = emptyInput;
     }
 
-    public getOutput(): number[] {
-        return this.output;
+    public appendInput(value: number) {
+        this.input.push(value);
+    }
+
+    public getOutput(clearBuffer?: boolean): number[] {
+        let output = [...this.output];
+        if (clearBuffer) {
+            this.output = [];
+        }
+        return output;
     }
     public getLastOutput(): number {
         return this.output[this.output.length - 1];
@@ -84,13 +90,18 @@ export class IntCodeProcessor {
 
     private opCodeInput(paramModes: number): boolean {
         const parameters = this.parseParams(paramModes, 1);
-        if (this.inputIndex > this.input.length && this.breakOnInput) {
+        if (this.input.length <= 0 && this.breakOnInput) {
             return false;
         }
-        this.writeAddress(parameters[0].address!, this.input[this.inputIndex]);
-        this.inputIndex++;
+        let waitAfter = false;
+        if (this.input.length <= 0 && this.inputValueOnEmpty !== undefined) {
+            this.writeAddress(parameters[0].address!, this.inputValueOnEmpty);
+            waitAfter = true;
+        } else {
+            this.writeAddress(parameters[0].address!, this.input.shift()!);
+        }
         this.instructionPointer += 2;
-        return true;
+        return !waitAfter;
     }
 
     private opCodeOutput(paramModes: number): boolean {
