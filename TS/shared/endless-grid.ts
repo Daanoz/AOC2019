@@ -74,6 +74,19 @@ export class EndlessGrid<T extends string | GridCell> {
                 callbackfn(this.get(x, y, defaultValue)!, [x, y]);
             }
         }
+        [].reduce
+    }
+
+    public reduce<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: [number, number]) => U, initialValue: U): U {
+        let value = initialValue;
+        for(let y = this.yRange[1]; y >= this.yRange[0]; y--) {
+            for(let x = this.xRange[0]; x <= this.xRange[1]; x++) {
+                if (this.has(x, y)) {
+                    value = callbackfn(value, this.get(x, y)!, [x, y]);
+                }
+            }
+        }
+        return value;
     }
 
     public clone(callbackfn?: (value: T, index: [number, number]) => T): EndlessGrid<T> {
