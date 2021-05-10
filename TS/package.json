@@ -23,7 +23,7 @@
     "@types/memoizee": "^0.4.3",
     "big-integer": "^1.6.48",
     "commander": "^4.0.1",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "memoizee": "^0.4.14",
     "rxjs": "^6.5.3",
     "terminal-kit": "^1.31.7"
